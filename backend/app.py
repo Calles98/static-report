@@ -4,6 +4,8 @@ from flask_cors import CORS
 import subprocess
 import shutil 
 
+PYTHON_PATH = os.getenv("PYTHON_ENV_PATH", "/Users/josecalles/Desktop/IMEx_Projects/Report-App/backend/venv/bin/python3")
+
 app = Flask(__name__)
 CORS(app)
 
@@ -18,12 +20,15 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return "No file part", 400
+    if 'file' not in request.files or 'analysisType' not in request.form:
+        return "Missing file or analysis type", 400
     
     file = request.files['file']
+    filename = request.form['filename']
+    analysis_type = request.form['analysisType']
     
-    if not file or file.filename == '':
+    
+    if not file or filename == '':
         return 'No selected file', 400
     
     if file and file.filename != '':
@@ -31,10 +36,10 @@ def upload_file():
         file.save(filepath)
         
     # Notebook to proecess
-    notebook_filename = select_notebook(request.form.get('type'))
+    notebook_filename = select_notebook(analysis_type)
     
     # Call Jupyter notebook processing function 
-    result_filepath = process_notebook(filepath, notebook_filename)
+    result_filepath = process_notebook(filepath, filename, notebook_filename)
     
     return send_file(result_filepath, as_attachment=True)
 
@@ -46,27 +51,31 @@ def select_notebook(type):
     }
     return notebook_mapping.get(type, 'Notebooks/default_notebook.ipynb')
 
-def process_notebook(filepath, notebook_filename):
-    result_html = os.path.join(RESULT_FOLDER, 'report.html')
+def process_notebook(filepath, filename, notebook_filename):
+    result_pdf = os.path.join(RESULT_FOLDER, 'report.html')
     temp_notebook = 'temp_notebook.ipynb'
-    
-    # Copy the original notebook to a temporay file
+
+    print(result_pdf)
+
+    # Copy the selected notebook to a temporary file to modify
     shutil.copy(notebook_filename, temp_notebook)
-    
-    # open and modify the notebook to include the filepath
-    with open(temp_notebook, 'r') as file: 
+
+    # Open and modify the notebook to include the file path
+    with open(temp_notebook, 'r') as file:
         notebook_content = file.read()
-        
-    # Update the notebook conten with the file path
-    filepath_str = repr(filepath) # to ensure proper string formatting
-    print("file paths to insert into noteboook", filepath_str)
-    notebook_content = notebook_content.replace('FILEPATH_PLACEHOLDER', filepath_str)
-    
+
+    # Update the notebook content with the file path
+    notebook_content = notebook_content.replace('FILE_PATH_PLACEHOLDER', filepath)
+    notebook_content = notebook_content.replace('FILE_NAME', filename)
+
+
     with open(temp_notebook, 'w') as file:
         file.write(notebook_content)
-        
+
     # Run the Jupyter notebook with the updated file path
-    command = f'jupyter nbconvert --to html --no-input --execute --output {result_html} {temp_notebook}'
+    #command = f'{PYTHON_PATH} -m jupyter nbconvert --to html --no-input --execute --output {result_pdf} {temp_notebook}'
+    command = f"{PYTHON_PATH} -m jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=flask_env  --no-input --output {result_pdf} {temp_notebook}"
+   
     print("Running command:", command)  # Debug print statement
     subprocess.run(command, shell=True, check=True)
     
