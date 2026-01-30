@@ -22,7 +22,7 @@ function DropZone({ file, setFile }) {
       }}
       onDragLeave={(e) => setIsDragging(false)}
       onDrop={handleDrop}
-      className={`flex flex-col items-center border-2 border-dashed rounded-md p-10 text-center transition ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+      className={`flex flex-col items-center border-2 border-dashed bg-slate-100 rounded-md p-10 text-center transition ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
     >
       <div className="p-2 m-2 h-20 w-20 rounded-full bg-blue-100 cursor-pointer flex items-center justify-center">
         <FaFileUpload className="text-xl" />

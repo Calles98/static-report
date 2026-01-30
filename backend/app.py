@@ -52,10 +52,10 @@ def select_notebook(type):
     return notebook_mapping.get(type, 'Notebooks/default_notebook.ipynb')
 
 def process_notebook(filepath, filename, notebook_filename):
-    result_pdf = os.path.join(RESULT_FOLDER, 'report.html')
+    result_html = os.path.join(RESULT_FOLDER, 'report.html')
     temp_notebook = 'temp_notebook.ipynb'
 
-    print(result_pdf)
+    print(result_html)
 
     # Copy the selected notebook to a temporary file to modify
     shutil.copy(notebook_filename, temp_notebook)
@@ -74,7 +74,7 @@ def process_notebook(filepath, filename, notebook_filename):
 
     # Run the Jupyter notebook with the updated file path
     #command = f'{PYTHON_PATH} -m jupyter nbconvert --to html --no-input --execute --output {result_pdf} {temp_notebook}'
-    command = f"{PYTHON_PATH} -m jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=flask_env  --no-input --output {result_pdf} {temp_notebook}"
+    command = f"{PYTHON_PATH} -m jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=flask_env  --no-input --output {result_html} {temp_notebook}"
    
     print("Running command:", command)  # Debug print statement
     subprocess.run(command, shell=True, check=True)
